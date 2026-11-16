@@ -1,0 +1,2 @@
+# .sh 必须是 LF，否则在 Linux/WSL 里会报 "bash\r: No such file or directory"
+*.sh text eol=lf
