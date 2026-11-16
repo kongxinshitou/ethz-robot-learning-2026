@@ -21,7 +21,7 @@ def reset_robot(default_qpos: np.ndarray) -> np.ndarray:
     Returns:
     - reset_qpos: np.ndarray. The joint positions to reset the robot to. Dimensionality: 1D array, Shape: (num_joints,).
     """
-    raise NotImplementedError()
+    return default_qpos + np.random.uniform(-0.5, 0.5, size=default_qpos.shape)
     
 
 
@@ -39,7 +39,9 @@ def reset_target_position(base_pos: np.ndarray) -> np.ndarray:
     Returns:
     - target_pos: np.ndarray. The 3D position of the target relative to the base. Dimensionality: 1D array, Shape: (3,).
     """
-    raise NotImplementedError()
+    offset = np.random.uniform(low=[0.2, -0.2, 0.1], high=[0.4, 0.2, 0.4])
+
+    return base_pos + offset
 
 
 def process_action(action: np.ndarray, jnt_range: np.ndarray) -> np.ndarray:
@@ -57,7 +59,9 @@ def process_action(action: np.ndarray, jnt_range: np.ndarray) -> np.ndarray:
     Returns:
     - target_qpos: np.ndarray. Target joint positions to apply as control. Dimensionality: 1D array, Shape: (num_joints,).
     """
-    raise NotImplementedError()
+
+    a = np.clip(np.asarray(action, dtype=np.float64), -1.0, 1.0)
+    return jnt_range[:, 0] + (a + 1.0) * 0.5 * (jnt_range[:, 1] - jnt_range[:, 0])
 
 
 def compute_reward(ee_tracking_error: float) -> float:
@@ -80,8 +84,9 @@ def compute_reward(ee_tracking_error: float) -> float:
     Returns:
     - reward: float. The computed reward based on the tracking error. Dimensionality: scalar
     """
-    raise NotImplementedError()
-
+    dense = np.exp(-2.0 * ee_tracking_error)          # (0, 1]，e=0 时最大
+    sparse = 1.0 if ee_tracking_error < 0.005 else 0.0  # 5 mm 以内额外 +1
+    return float(dense + sparse)
 
 def get_obs(qpos: np.ndarray, ee_pos_w: np.ndarray, ee_rot_w: np.ndarray, base_pos_w: np.ndarray, base_rot_w: np.ndarray, target_pos_w: np.ndarray) -> np.ndarray:
     """
@@ -109,4 +114,15 @@ def get_obs(qpos: np.ndarray, ee_pos_w: np.ndarray, ee_rot_w: np.ndarray, base_p
 
     Hints: You can use the provided functions quat_mul, quat_conjugate, quat_normalize, rot_mat_to_quat for quaternion operations.
     """
-    raise NotImplementedError()
+    Rb = base_rot_w
+
+
+    ee_pos_base     = Rb.T @ (ee_pos_w - base_pos_w)
+    target_pos_base = Rb.T @ (target_pos_w - base_pos_w)
+
+    
+    ee_rot_base  = Rb.T @ ee_rot_w
+    ee_quat_base = quat_normalize(rot_mat_to_quat(ee_rot_base))
+
+    
+    return np.concatenate([qpos, ee_pos_base, ee_quat_base, target_pos_base])

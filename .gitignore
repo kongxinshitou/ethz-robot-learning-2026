@@ -1,0 +1,36 @@
+# ==========================================================================
+# 目的：让 `git add -A` 只提交"代码"，不会把 3.4 GB 的 Windows 虚拟环境、
+#       5 GB 的 uv 缓存和 150 MB 的实验数据塞进 GitHub。
+# ==========================================================================
+
+# ---- 环境：新机器必须重建，绝不提交 ----
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.mplcache/
+.mypy_cache/
+.pytest_cache/
+.vscode/
+.idea/
+MUJOCO_LOG.TXT
+.mujoco/
+
+# ---- 大数据 / 二进制：单独用 pack_data_for_gpu.ps1 打数据包过去 ----
+hw3_imitation_learning/datasets/
+hw3_imitation_learning/checkpoints/
+hw3_imitation_learning/logs/
+hw2_robot_control_mdps/logs/
+hw4_reinforcement_learning/logs/
+hw4_reinforcement_learning/.mplcache/
+slides/
+hw3_reference/
+
+# ---- 隐私：证件照之类永远不要进仓库 ----
+*证件照*
+id-photo-*
+
+# ---- 临时产物 ----
+*.log
+*.tmp
+.tmp/

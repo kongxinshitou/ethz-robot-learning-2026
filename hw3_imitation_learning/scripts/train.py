@@ -28,9 +28,9 @@ from hw3.model import BasePolicy, build_policy
 from torch.utils.data import DataLoader, random_split
 
 # TODO: Choose your own hyperparameters!
-EPOCHS = ... 
-BATCH_SIZE = ...
-LR = ...
+EPOCHS = 600
+BATCH_SIZE = 320
+LR = 1e-3
 VAL_SPLIT = 0.1
 
 
@@ -46,8 +46,14 @@ def train_one_epoch(
 
     for batch in loader:
         states, action_chunks = batch
-        # TODO: Implement the training step for one batch here.
-        # This mostly: Get states and action_chunks onto the correct device, compute the loss, and step the optimizer.
+        states = states.to(device)
+        action_chunks = action_chunks.to(device)
+        loss = model.compute_loss(states, action_chunks)
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+        n_batches += 1
 
     return total_loss / max(n_batches, 1)
 
@@ -64,8 +70,11 @@ def evaluate(
 
     for batch in loader:
         states, action_chunks = batch
-        # TODO: Implement the evaluation step for one batch here.
-
+        states = states.to(device)
+        action_chunks = action_chunks.to(device)
+        loss = model.compute_loss(states, action_chunks)
+        total_loss += loss.item()
+        n_batches += 1
     return total_loss / max(n_batches, 1)
 
 
@@ -87,6 +96,73 @@ def main() -> None:
         default=16,
         help="Action chunk horizon H (default: 16).",
     )
+
+    parser.add_argument(
+        "--d-model",
+        "--hiden-dim",
+        dest="d_model",
+        type=int,
+        default=256,
+        help="MLP hidden width (alias: --hiden-dim), default 256.",
+    )
+    parser.add_argument(
+        "--depth",
+        type=int,
+        default=3,
+        help="Number of MLP hidden layers, default 3.",
+    )
+
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=EPOCHS,
+        help=f"Number of training epochs (default: {EPOCHS}).",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=BATCH_SIZE,
+        help=f"Batch size (default: {BATCH_SIZE}).",
+    )
+    parser.add_argument(
+        "--lr",
+        type=float,
+        default=LR,
+        help=f"Learning rate (default: {LR}).",
+    )
+    parser.add_argument(
+        "--weight-decay",
+        type=float,
+        default=1e-4,
+        help="AdamW weight decay (default: 1e-4).",
+    )
+    parser.add_argument(
+        "--val-split",
+        type=float,
+        default=VAL_SPLIT,
+        help=f"Validation fraction (default: {VAL_SPLIT}).",
+    )
+    parser.add_argument(
+        "--num-workers",
+        type=int,
+        default=0,
+        help="DataLoader worker processes (default: 0).",
+    )
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=Path,
+        default=None,
+        help="Override the checkpoint output directory "
+        "(default: ./checkpoints/single_cube or ./checkpoints/multi_cube).",
+    )
+    parser.add_argument(
+        "--init-from",
+        type=Path,
+        default=None,
+        help="Optional .pt checkpoint to warm-start the model weights from, "
+        "e.g. the exercise-1 checkpoint when retraining for exercise 2.",
+    )
+
     parser.add_argument(
         "--state-keys",
         nargs="+",
@@ -103,12 +179,23 @@ def main() -> None:
         "Supports column slicing with [:N], [M:], [M:N]. "
         "If omitted, uses the action_key attribute from the zarr metadata.",
     )
+    parser.add_argument("--extra-zarr", type=Path, nargs="*", default=[])
+
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
+
+    # eval_utils.load_checkpoint 需要 state_keys 才能把 obs 拼成同样的输入；
+    # 不传的话 checkpoint 里 state_keys=None，评估时会直接报错。
+    if args.state_keys is None or args.action_keys is None:
+        raise SystemExit(
+            "请显式指定 --state-keys 和 --action-keys（不要依赖 zarr metadata 的默认值），例如：\n"
+            '  --state-keys state_ee_xyz state_gripper "state_cube[:3]" state_obstacle '
+            "--action-keys action_ee_xyz action_gripper"
+        )
 
     # ── load data ─────────────────────────────────────────────────────
     zarr_paths = [args.zarr]
@@ -141,17 +228,23 @@ def main() -> None:
     print(f"  state_dim={states.shape[1]}, action_dim={actions.shape[1]}")
 
     # ── train / val split ─────────────────────────────────────────────
-    n_val = max(1, int(len(dataset) * VAL_SPLIT))
+    n_val = max(1, int(len(dataset) * args.val_split))
     n_train = len(dataset) - n_val
     train_ds, val_ds = random_split(
         dataset, [n_train, n_val], generator=torch.Generator().manual_seed(args.seed)
     )
 
     train_loader = DataLoader(
-        train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=0
+        train_ds,
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=args.num_workers,
     )
     val_loader = DataLoader(
-        val_ds, batch_size=BATCH_SIZE, shuffle=False, num_workers=0
+        val_ds,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
     )
 
     # ── model ─────────────────────────────────────────────────────────
@@ -159,16 +252,34 @@ def main() -> None:
         args.policy,
         state_dim=states.shape[1],
         action_dim=actions.shape[1],
-        # TODO: build with your desired specifications
+        chunk_size=args.chunk_size,
+        d_model=args.d_model,
+        depth=args.depth,
     ).to(device)
 
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Model parameters: {n_params:,}")
 
-    # TODO: implement an optimizer and scheduler
-    # optimizer =
-    # scheduler =
+    # Optional warm start (useful for ex2: continue from the ex1 checkpoint).
+    if args.init_from is not None:
+        try:
+            init_ckpt = torch.load(args.init_from, map_location=device, weights_only=False)
+            model.load_state_dict(init_ckpt["model_state_dict"])
+            print(f"Warm-started model weights from {args.init_from}")
+        except Exception as exc:  # shape mismatch / missing file -> train from scratch
+            print(f"WARNING: could not warm-start from {args.init_from}: {exc}")
+            print("         Training from scratch instead.")
 
+    optimizer = torch.optim.AdamW(
+        model.parameters(), lr=args.lr, weight_decay=args.weight_decay
+    )
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer=optimizer, T_max=args.epochs
+    )
+    print(
+        f"Hyperparameters: epochs={args.epochs}, batch_size={args.batch_size}, "
+        f"lr={args.lr}, weight_decay={args.weight_decay}, val_split={args.val_split}"
+    )
     # ── training loop ─────────────────────────────────────────────────
     best_val = float("inf")
 
@@ -190,14 +301,16 @@ def main() -> None:
     if n_dagger_eps > 0:
         save_name = f"best_model_{action_space}_{args.policy}_dagger{n_dagger_eps}ep.pt"
     # Default: checkpoints/<task>/
-    if "multi_cube" in str(args.zarr):
+    if args.checkpoint_dir is not None:
+        ckpt_dir = args.checkpoint_dir
+    elif "multi_cube" in str(args.zarr):
         ckpt_dir = Path("./checkpoints/multi_cube")
     else:
         ckpt_dir = Path("./checkpoints/single_cube")
     save_path = ckpt_dir / save_name
     save_path.parent.mkdir(parents=True, exist_ok=True)
 
-    for epoch in range(1, EPOCHS + 1):
+    for epoch in range(1, args.epochs + 1):
         train_loss = train_one_epoch(model, train_loader, optimizer, device)
         val_loss = evaluate(model, val_loader, device)
         scheduler.step()
@@ -220,8 +333,11 @@ def main() -> None:
                     "policy_type": args.policy,
                     "state_keys": args.state_keys,
                     "action_keys": args.action_keys,
+                    "d_model": args.d_model,
+                    "depth": args.depth,
                     "state_dim": int(states.shape[1]),
                     "action_dim": int(actions.shape[1]),
+                    "epochs": args.epochs,
                     "val_loss": val_loss,
                 },
                 save_path,
@@ -229,7 +345,7 @@ def main() -> None:
             tag = " ✓ saved"
 
         print(
-            f"Epoch {epoch:3d}/{EPOCHS} | "
+            f"Epoch {epoch:3d}/{args.epochs} | "
             f"train {train_loss:.6f} | val {val_loss:.6f}{tag}"
         )
 

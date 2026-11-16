@@ -26,7 +26,7 @@ from hw3.sim_env import (
     SO100MulticubeSimEnv,
     SO100SimEnv,
 )
-from hw3.teleop_utils import CAMERA_NAMES, compose_camera_views
+from hw3.teleop_utils import CAMERA_NAMES, compose_camera_views, fit_for_display
 from so101_gym.constants import ASSETS_DIR
 
 XML_PATH = ASSETS_DIR / "so100_transfer_cube_obstacle_ee.xml"
@@ -136,7 +136,7 @@ def run_episode(
                 2,
             )
 
-        cv2.imshow("SO100 Multicube Eval" if multicube else "SO100 Eval", img)
+        cv2.imshow("SO100 Multicube Eval" if multicube else "SO100 Eval", fit_for_display(img))
         key = cv2.waitKey(1) & 0xFF
         if key == 27:
             return False, True, None

@@ -28,6 +28,7 @@ from hw3.teleop_utils import (
     OBSTACLE_DIM,
     ZarrEpisodeWriter,
     compose_camera_views,
+    fit_for_display,
     handle_teleop_key,
     load_keymap,
 )
@@ -217,7 +218,7 @@ class BaseCv2TeleopRecorder:
                     mujoco.mj_step(self.model, self.data)
 
                 img = self._overlay_status(self._compose_views())
-                cv2.imshow(self.window_name, img)
+                cv2.imshow(self.window_name, fit_for_display(img))
         finally:
             self._finalize_on_exit()
             self.writer.flush()

@@ -42,6 +42,7 @@ from hw3.teleop_utils import (
     DEFAULT_KEYMAP_PATH,
     ZarrEpisodeWriter,
     compose_camera_views,
+    fit_for_display,
     handle_teleop_key,
     load_keymap,
 )
@@ -280,7 +281,7 @@ def run_dagger_episode(
             1,
         )
 
-        cv2.imshow("DAgger Eval", img)
+        cv2.imshow("DAgger Eval", fit_for_display(img))
         time.sleep(env.dt_ctrl)
 
     # Episode ended by reaching max_steps

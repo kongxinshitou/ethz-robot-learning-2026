@@ -182,6 +182,43 @@ def compose_camera_views(
     return np.concatenate([top_row, bottom_row], axis=0)
 
 
+# ── display helpers ──────────────────────────────────────────────────
+
+# Pixels reserved for the window title bar and the Windows taskbar.
+_DISPLAY_MARGIN = (24, 96)
+
+
+def get_desktop_size() -> tuple[int, int]:
+    """Return the primary desktop resolution in pixels (best effort)."""
+    try:
+        import ctypes
+
+        user32 = ctypes.windll.user32
+        return int(user32.GetSystemMetrics(0)), int(user32.GetSystemMetrics(1))
+    except Exception:  # noqa: BLE001 - non-Windows platforms
+        return 1920, 1080
+
+
+def fit_for_display(
+    img_bgr: np.ndarray, margin: tuple[int, int] = _DISPLAY_MARGIN
+) -> np.ndarray:
+    """Downscale *img_bgr* so the OpenCV window fits on screen (never upscales).
+
+    The three-camera layout is 1280x960 by default, which does not fit on a
+    1280x720 laptop panel.  Only the displayed copy is resized; the simulation
+    render resolution and the recorded data are untouched.
+    """
+    screen_w, screen_h = get_desktop_size()
+    max_w = max(320, screen_w - margin[0])
+    max_h = max(240, screen_h - margin[1])
+    scale = min(1.0, max_w / img_bgr.shape[1], max_h / img_bgr.shape[0])
+    if scale >= 0.999:
+        return img_bgr
+    new_w = max(1, int(round(img_bgr.shape[1] * scale)))
+    new_h = max(1, int(round(img_bgr.shape[0] * scale)))
+    return cv2.resize(img_bgr, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+
 # ── ZarrEpisodeWriter ────────────────────────────────────────────────
 
 
