@@ -10,19 +10,22 @@
 | 内容 | 怎么搬 | 状态 |
 |---|---|---|
 | 代码 + 你的 18 处改动 + 自检脚本 | **GitHub 私有仓库** | ✅ 已推（25 MB） |
-| hw3 数据集 74 MB / 65136 文件 | 同上（一次性搬，之后别再改它） | ✅ 已推 |
+| hw3 数据集 74 MB / 65136 文件（含 raw/processed/inspect 等 10 个子目录） | 同上（一次性搬，之后别再改它） | ✅ 已推 |
 | hw3 训练权重 61.8 MB（6 个 `.pt`） | 同上 | ✅ 已推 |
 | hw2 PPO checkpoint 2 MB | 同上 | ✅ 已推 |
 | 课件 `slides/` 35 MB | 同上 | ✅ 已推 |
+| 专家演示视频 `hw3_reference/` 14 MB | 同上 | ✅ 已推 |
+| 中文文档 6 篇 + `hw3_*.py` 12 个 + `pid-teach/` + `.tmp` 实验报告 | 同上（`_my_notes/`） | ✅ 已推（1 MB） |
 | **4 个 `.venv`（3.29 GB）** | **不搬，在目标机上重建** | ❌ 别传 |
 | `.uv-cache`（1.94 GB） | 不搬，自动重建 | ❌ 别传 |
-| `证件照_祝鸿志.*` | 不搬（隐私） | ❌ 别传 |
+| `export/`（529 MB，含 210 MB zip） | GitHub 单文件上限 100 MB，且可重生成 | ❌ 别传 |
+| `证件照_祝鸿志.*`、`downloads/` | 不搬（隐私） | ❌ 别传 |
 
 **为什么 `.venv` 连 Windows→Windows 都不能直接拷**：里面是 CPU 版的 `torch==2.15.0+cpu`，
 拷过去也能 import，但 `torch.cuda.is_available()` 永远 `False`，等于白搬 3.3 GB。
 必须用 `--torch-backend` 重新装 CUDA 版。这是这次迁移唯一"必须重装"的东西。
 
-仓库现在 **≈212 MB**（其中数据 187 MB），clone 下来就全了，**不需要再单独传 zip**。
+仓库现在 **≈226 MB / 65,422 个文件**，clone 下来就全了，**不需要再单独传 zip**。
 
 ---
 
@@ -63,27 +66,34 @@ ethz-robot-learning-2026/            ← git clone 得到的
 │   ├─ hw3_imitation_learning/checkpoints/  ✅ 已提交（61.8 MB）
 │   └─ hw2_robot_control_mdps/logs/          ✅ 已提交（PPO checkpoint）
 ├─ slides/                                  ✅ 已提交（35 MB 课件）
+├─ hw3_reference/                           ✅ 已提交（14 MB 专家演示视频 + 标注）
+├─ _my_notes/                               ← 你的笔记与工具（75 个文件，1 MB）
+│   ├─ HW2/HW3/HW4 中文文档 6 篇             官方 README 翻译、函数手册、实操指南、写码清单
+│   ├─ hw3_*.py × 12                        标注视频、清洗数据、demo、自检等工具脚本
+│   ├─ ik6_*.py / scratch_dbg*.py            机动学与调试脚本
+│   ├─ *.cmd / whichenv.py                   旧的 Windows 快捷方式
+│   ├─ figure_planar.png / site_demo.png     图
+│   ├─ pid-teach/                            PID 教学（3 张图 + demo 脚本）
+│   └─ scratch/                              .tmp 里的实验脚本与报告（data_report、report2-4、selfcheck_final、bench_* …）
 └─ _gpu_tools/                              ← 迁移工具（也在仓库里，所以 clone 完就有）
     ├─ setup_gpu_env.ps1                    Windows 一键重建（主用）
     ├─ setup_gpu_env.sh                     Linux/WSL 版（备用）
+    ├─ pack_data_for_gpu.ps1 / pack_for_gpu.ps1   离线打包脚本
     ├─ GPU迁移_操作手册.md                   本文件
     ├─ MIGRATE_TO_GPU.md                    文件来源盘点
     └─ env-lock/                            各环境精确版本快照
 ```
 
-**没有的东西**（故意的）：`.venv/`、`.uv-cache/`、`证件照_*`、`hw3_reference/`（14 MB 演示视频，
-要的话从旧机器单独拷）、`.vscode/`、`__pycache__/`。
+**没有的东西**（故意的）：
 
-**根目录的笔记工具**（`hw3_*.py`、`HW*.md`、`pid-teach/`、`env-lock/`）目前还在旧机器的工作区根，
-没有进仓库。要一起带走，在旧机器上执行：
-
-```powershell
-cd "D:\Users\00796533\Documents\deepseek-harness\default-workspace"
-$dst = "ethz-robot-learning-2026\_my_notes"; New-Item -ItemType Directory $dst -Force | Out-Null
-Copy-Item *.md,*.py,*.cmd,*.ps1,*.sh -Destination $dst -Force
-Copy-Item env-lock,pid-teach -Destination $dst -Recurse -Force
-cd ethz-robot-learning-2026; git add -A; git commit -m "笔记与工具"; git push
-```
+| 不提交的东西 | 原因 |
+|---|---|
+| `.venv/` × 4（3.29 GB）、`.uv-cache/`（1.94 GB） | 跨机器无效，必须在目标机重建 |
+| `证件照_祝鸿志.*` | 隐私 |
+| `export/`（529 MB） | 打包产物，里面那个 210 MB 的 zip **单文件超 GitHub 100 MB 硬限制**，且脚本可随时重生成 |
+| `downloads/` | 证件照原始件 |
+| `eth-robot-learning/` | 你 GitHub 上已有的独立仓库（`kongxinshitou/eth-robot-learning`），内容与主仓库重复 |
+| `__pycache__/`、`*.pyc`、`.vscode/`、`.mplcache/`、`MUJOCO_LOG.TXT` | 编译/运行缓存 |
 
 ---
 
@@ -194,4 +204,4 @@ git rebase origin/main        # 在 my-work 分支上操作
 ## 8. 一句话总结
 
 > 目标机 Windows：`winget install uv` → `git clone` → 跑 `_gpu_tools\setup_gpu_env.ps1` → 看四行 `cuda= True`。
-> 唯一必须"重做"的是 3.29 GB 的虚拟环境；代码 + 数据 + 权重 212 MB 已在私有仓库里，一条命令拿全。
+> 唯一必须"重做"的是 3.29 GB 的虚拟环境；代码 + 数据 + 权重 + 笔记 + 视频 226 MB 已在私有仓库里，一条命令拿全。
