@@ -1,0 +1,9 @@
+{
+  "source": "datasets\\raw\\single_cube\\teleop",
+  "step_mm": 8.0,
+  "episodes_in": 24,
+  "episodes_out": 24,
+  "steps_in": 29216,
+  "steps_out": 4406,
+  "control_hz": 10.0
+}

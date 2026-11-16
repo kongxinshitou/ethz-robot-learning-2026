@@ -1,0 +1,82 @@
+{
+  "seed": 0,
+  "control_hz": 10.0,
+  "steps": 327,
+  "success": true,
+  "cube0": [
+    -0.22924661867343965,
+    0.3992083708202522,
+    0.0199958
+  ],
+  "bin_xy": [
+    -0.2,
+    0.7
+  ],
+  "obstacle": [
+    -0.2135957734955672,
+    0.45,
+    0.06
+  ],
+  "phases": [
+    {
+      "name": "open gripper",
+      "start": 0,
+      "end": 3
+    },
+    {
+      "name": "lift",
+      "start": 3,
+      "end": 15
+    },
+    {
+      "name": "around barrier (left)",
+      "start": 15,
+      "end": 73
+    },
+    {
+      "name": "align with cube",
+      "start": 73,
+      "end": 129
+    },
+    {
+      "name": "descend",
+      "start": 129,
+      "end": 179
+    },
+    {
+      "name": "grasp",
+      "start": 179,
+      "end": 195
+    },
+    {
+      "name": "lift cube",
+      "start": 195,
+      "end": 229
+    },
+    {
+      "name": "carry around barrier",
+      "start": 229,
+      "end": 260
+    },
+    {
+      "name": "to bin",
+      "start": 260,
+      "end": 270
+    },
+    {
+      "name": "insert into bin",
+      "start": 270,
+      "end": 285
+    },
+    {
+      "name": "release",
+      "start": 285,
+      "end": 303
+    },
+    {
+      "name": "retreat",
+      "start": 303,
+      "end": 327
+    }
+  ]
+}

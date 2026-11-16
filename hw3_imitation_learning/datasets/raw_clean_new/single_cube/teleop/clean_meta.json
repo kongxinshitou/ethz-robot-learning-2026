@@ -1,0 +1,9 @@
+{
+  "source": "datasets\\raw\\single_cube\\teleop\\2026-11-08_05-59-58",
+  "step_mm": 6.0,
+  "episodes_in": 19,
+  "episodes_out": 19,
+  "steps_in": 12581,
+  "steps_out": 3821,
+  "control_hz": 10.0
+}

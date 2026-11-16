@@ -1,0 +1,59 @@
+{
+  "attributes": {
+    "xml": "D:\\Users\\00796533\\Documents\\deepseek-harness\\default-workspace\\ethz-robot-learning-2026\\hw3_imitation_learning\\so101_gym\\assets\\so100_multicube_ee.xml",
+    "joint_names": [
+      "Rotation",
+      "Pitch",
+      "Elbow",
+      "Wrist_Pitch",
+      "Wrist_Roll",
+      "Jaw"
+    ],
+    "cube_colors": [
+      "red",
+      "green",
+      "blue"
+    ],
+    "cube_joint_names": [
+      "red_box_joint",
+      "green_box_joint",
+      "blue_box_joint"
+    ],
+    "state_joints_spec": "qpos(joints)",
+    "state_ee_spec": "ee_pos(3) + ee_quat_wxyz(4)",
+    "state_cube_spec": "not_stored_in_multicube_raw",
+    "pos_cube_red_spec": "red_cube_pos(3) + red_cube_quat_wxyz(4)",
+    "pos_cube_green_spec": "green_cube_pos(3) + green_cube_quat_wxyz(4)",
+    "pos_cube_blue_spec": "blue_cube_pos(3) + blue_cube_quat_wxyz(4)",
+    "state_goal_spec": "one_hot(red, green, blue) = 3",
+    "goal_pos_spec": "bin_center_world_xyz(3)",
+    "state_gripper_spec": "gripper_angle(1)",
+    "action_gripper_spec": "gripper_ctrl(1)",
+    "control_hz": 10.0,
+    "cameras_display": [
+      "left_wrist",
+      "angle",
+      "top"
+    ],
+    "cleaned_from": [
+      "datasets\\raw\\multi_cube\\teleop\\2026-11-10_02-39-14\\so100_multicube_teleop.zarr",
+      "datasets\\raw\\multi_cube\\teleop\\2026-11-10_03-43-38\\so100_multicube_teleop.zarr",
+      "datasets\\raw\\multi_cube\\teleop\\2026-11-10_04-13-46\\so100_multicube_teleop.zarr",
+      "datasets\\raw\\multi_cube\\teleop\\2026-11-10_06-57-29\\so100_multicube_teleop.zarr",
+      "datasets\\raw\\multi_cube\\teleop\\2026-11-10_08-15-18\\so100_multicube_teleop.zarr"
+    ],
+    "clean_num_episodes": 105,
+    "clean_num_steps": 11827,
+    "clean_static_step_mm": 5.0,
+    "clean_rot_deg": 3.0,
+    "clean_grip_step": 0.02,
+    "clean_cube_step_mm": 2.0,
+    "clean_max_gap": 0,
+    "clean_drop_bad": true,
+    "clean_reset_contamination_dropped": 5,
+    "clean_success_xy_tol": 0.04,
+    "clean_success_z_tol": 0.04
+  },
+  "zarr_format": 3,
+  "node_type": "group"
+}

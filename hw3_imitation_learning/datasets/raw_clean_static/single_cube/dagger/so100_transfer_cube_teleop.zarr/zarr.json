@@ -1,0 +1,18 @@
+{
+  "attributes": {
+    "cleaned_from": [
+      "datasets\\raw_clean_v3\\single_cube\\dagger\\round1\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw_clean_v3\\single_cube\\dagger\\round2\\so100_transfer_cube_teleop.zarr"
+    ],
+    "step_mm": 4.0,
+    "grip_step": 0.02,
+    "max_gap": 10,
+    "min_frames": 8,
+    "episodes_in": 40,
+    "steps_in": 15945,
+    "steps_out": 6109,
+    "source_kind": "dagger"
+  },
+  "zarr_format": 3,
+  "node_type": "group"
+}
