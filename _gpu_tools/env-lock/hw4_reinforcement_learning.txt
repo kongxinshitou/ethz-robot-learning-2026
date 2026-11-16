@@ -1,0 +1,53 @@
+﻿uv : Using Python 3.12.4 environment at: ethz-robot-learning-2026\hw4_reinforcement_learning\.venv
+所在位置 行:14 字符: 3
++   uv pip freeze --python $py 2>&1 | Out-File -Encoding utf8 "$ws\env- ...
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Using Python 3...._learning\.venv:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+absl-py==2.5.1
+cloudpickle==3.1.2
+colorama==0.4.6
+contourpy==1.4.0
+cycler==0.12.1
+decorator==5.3.1
+etils==1.14.0
+farama-notifications==0.0.6
+filelock==4.2.6
+fonttools==4.68.0
+fsspec==2026.9.0
+glfw==2.11.0
+grpcio==1.85.1
+gymnasium==1.4.0
+imageio==2.38.1
+imageio-ffmpeg==0.7.0
+jinja2==3.1.6
+kiwisolver==1.5.1
+markdown==3.11.2
+markupsafe==3.0.4
+matplotlib==3.11.2
+moviepy==2.2.1
+mpmath==1.3.0
+mujoco==3.17.0
+networkx==3.7
+numpy==2.5.4
+packaging==26.3
+pillow==11.3.0
+proglog==0.1.12
+protobuf==7.36.2
+pygame==2.6.1
+pyopengl==3.1.10
+pyparsing==3.3.3
+python-dateutil==4.0.0
+python-dotenv==1.2.4
+setuptools==84.2.1
+sympy==1.14.0
+tensorboard==2.20.0
+tensorboard-data-server==0.7.2
+torch==2.15.0
+tqdm==4.70.1
+typing-extensions==4.16.0
+tzdata==2026.6
+websockets==17.4
+werkzeug==3.1.9
+zipp==4.1.2
